@@ -1,0 +1,9 @@
+import { useMutation } from '@tanstack/react-query'
+import { Save } from 'lucide-react'
+import { useEffect, useState, type FormEvent } from 'react'
+import { api } from '../api/client'
+import type { User } from '../api/types'
+import { useAuth } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
+
+export function SettingsPage(){const{user,setUser}=useAuth();const toast=useToast();const[name,setName]=useState(user?.display_name??'');const[bio,setBio]=useState(user?.bio??'');useEffect(()=>{setName(user?.display_name??'');setBio(user?.bio??'')},[user]);const save=useMutation({mutationFn:()=>api.patch<User>('/users/me/',{display_name:name,bio}),onSuccess:u=>{setUser(u);toast('Profile saved.','success')},onError:e=>toast(e.message,'error')});function submit(e:FormEvent){e.preventDefault();save.mutate()}return <div className="page narrow-page"><div className="page-heading"><div><span className="eyebrow">Account Settings</span><h1>Your account and profile.</h1><p>Keep your identity clear across assignments, comments and activity.</p></div></div><section className="panel settings-panel"><div className="profile-summary"><div className="avatar large">{user?.display_name.slice(0,1).toUpperCase()}</div><div><strong>{user?.display_name}</strong><span>{user?.email}</span><span className={user?.is_email_verified?'verified':'unverified'}>{user?.is_email_verified?'Email verified':'Email not verified'}</span></div></div><form className="stack-form" onSubmit={submit}><label>Display name<input value={name} onChange={e=>setName(e.target.value)} required/></label><label>Bio<textarea rows={5} value={bio} onChange={e=>setBio(e.target.value)} placeholder="Tell your team what you work on."/></label><button className="primary-button" disabled={save.isPending}><Save size={16}/>{save.isPending?'Saving…':'Save profile'}</button></form></section></div>}
